@@ -1,21 +1,150 @@
 
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../../hooks/useTheme';
-import ThemeToggle from '../../components/ThemeToggle';
 import { mockStatuses, currentUserId } from '../../data/mockData';
 import { Status } from '../../types';
 
+const createStyles = (theme: any) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: theme.colors.text,
+  },
+  content: {
+    flex: 1,
+  },
+  myStatusSection: {
+    backgroundColor: theme.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  myStatusItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  statusAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    marginRight: 12,
+    position: 'relative',
+  },
+  avatar: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 28,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  statusRing: {
+    position: 'absolute',
+    top: -2,
+    left: -2,
+    right: -2,
+    bottom: -2,
+    borderRadius: 30,
+    borderWidth: 3,
+    borderColor: theme.colors.primary,
+  },
+  addStatusButton: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: theme.colors.surface,
+  },
+  statusInfo: {
+    flex: 1,
+  },
+  statusName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: 2,
+  },
+  statusTime: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: theme.colors.background,
+  },
+  statusItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: theme.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  statusItemAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
+  },
+  viewedStatusRing: {
+    borderColor: theme.colors.textSecondary,
+    opacity: 0.5,
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 16,
+  },
+});
+
 export default function StatusScreen() {
   const { theme } = useTheme();
-  const [statuses] = useState<Status[]>(mockStatuses);
-  const [myStatus, setMyStatus] = useState<Status | null>(null);
+  const styles = createStyles(theme);
+  const [statuses] = useState(mockStatuses);
 
-  const recentStatuses = statuses.filter(status => !status.viewedBy.includes(currentUserId));
-  const viewedStatuses = statuses.filter(status => status.viewedBy.includes(currentUserId));
+  const recentStatuses = statuses.filter(status => !status.viewed);
+  const viewedStatuses = statuses.filter(status => status.viewed);
 
   const handleCreateStatus = async () => {
     console.log('Creating new status');
@@ -35,28 +164,14 @@ export default function StatusScreen() {
     });
 
     if (!result.canceled) {
-      console.log('Image selected for status:', result.assets[0].uri);
-      Alert.alert('Success', 'Status created! (This is a demo)');
-      
-      // In a real app, you would upload the image and create the status
-      const newStatus: Status = {
-        id: Date.now().toString(),
-        userId: currentUserId,
-        user: { id: currentUserId, email: 'kagiso@blaq.app', displayName: 'You' },
-        imageUrl: result.assets[0].uri,
-        caption: 'My new status!',
-        createdAt: new Date(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        viewedBy: [],
-      };
-      
-      setMyStatus(newStatus);
+      console.log('Selected image:', result.assets[0].uri);
+      Alert.alert('Status Created', 'Your status has been posted!');
     }
   };
 
   const handleViewStatus = (status: Status) => {
     console.log('Viewing status:', status.id);
-    Alert.alert('Status Viewer', `Viewing ${status.user.displayName}'s status\n\n"${status.caption}"\n\nThis would open a full-screen status viewer in a real app.`);
+    Alert.alert('Status Viewer', `Viewing ${status.user.name}'s status`);
   };
 
   const formatTimeAgo = (date: Date) => {
@@ -69,222 +184,97 @@ export default function StatusScreen() {
     return '1 day ago';
   };
 
-  const styles = createStyles(theme);
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ThemeToggle />
-      
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.colors.text }]}>Status</Text>
+        <Text style={styles.headerTitle}>Status</Text>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* My Status Section */}
-        <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-          <TouchableOpacity style={styles.myStatusContainer} onPress={handleCreateStatus}>
-            <View style={styles.statusItem}>
-              <View style={styles.avatarContainer}>
-                <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>
-                  <Text style={styles.avatarText}>K</Text>
-                </View>
-                <View style={[styles.addIcon, { backgroundColor: theme.colors.primary }]}>
-                  <Ionicons name="add" size={16} color="#FFFFFF" />
-                </View>
+        <View style={styles.myStatusSection}>
+          <TouchableOpacity style={styles.myStatusItem} onPress={handleCreateStatus}>
+            <View style={styles.statusAvatar}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>ME</Text>
               </View>
-              <View style={styles.statusInfo}>
-                <Text style={[styles.statusName, { color: theme.colors.text }]}>My Status</Text>
-                <Text style={[styles.statusTime, { color: theme.colors.textSecondary }]}>
-                  {myStatus ? formatTimeAgo(myStatus.createdAt) : 'Tap to add status update'}
-                </Text>
+              <View style={styles.addStatusButton}>
+                <Ionicons name="add" size={12} color="white" />
               </View>
+            </View>
+            <View style={styles.statusInfo}>
+              <Text style={styles.statusName}>My Status</Text>
+              <Text style={styles.statusTime}>Tap to add status update</Text>
             </View>
           </TouchableOpacity>
         </View>
 
-        {/* Recent Updates Section */}
         {recentStatuses.length > 0 && (
-          <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Recent Updates</Text>
-            
+          <>
+            <Text style={styles.sectionTitle}>Recent Updates</Text>
             {recentStatuses.map((status) => (
               <TouchableOpacity
                 key={status.id}
                 style={styles.statusItem}
                 onPress={() => handleViewStatus(status)}
               >
-                <View style={styles.avatarContainer}>
-                  <View style={[styles.avatarBorder, { borderColor: theme.colors.primary }]}>
-                    <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>
-                      <Text style={styles.avatarText}>
-                        {status.user.displayName.charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
+                <View style={[styles.statusItemAvatar, styles.statusRing]}>
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>
+                      {getInitials(status.user.name)}
+                    </Text>
                   </View>
                 </View>
                 <View style={styles.statusInfo}>
-                  <Text style={[styles.statusName, { color: theme.colors.text }]}>
-                    {status.user.displayName}
-                  </Text>
-                  <Text style={[styles.statusTime, { color: theme.colors.textSecondary }]}>
+                  <Text style={styles.statusName}>{status.user.name}</Text>
+                  <Text style={styles.statusTime}>
                     {formatTimeAgo(status.createdAt)}
                   </Text>
                 </View>
-                <Image source={{ uri: status.imageUrl }} style={styles.statusPreview} />
               </TouchableOpacity>
             ))}
-          </View>
+          </>
         )}
 
-        {/* Viewed Updates Section */}
         {viewedStatuses.length > 0 && (
-          <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Viewed Updates</Text>
-            
+          <>
+            <Text style={styles.sectionTitle}>Viewed Updates</Text>
             {viewedStatuses.map((status) => (
               <TouchableOpacity
                 key={status.id}
                 style={styles.statusItem}
                 onPress={() => handleViewStatus(status)}
               >
-                <View style={styles.avatarContainer}>
-                  <View style={[styles.avatarBorder, { borderColor: theme.colors.border }]}>
-                    <View style={[styles.avatar, { backgroundColor: theme.colors.textSecondary }]}>
-                      <Text style={styles.avatarText}>
-                        {status.user.displayName.charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
+                <View style={[styles.statusItemAvatar, styles.statusRing, styles.viewedStatusRing]}>
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>
+                      {getInitials(status.user.name)}
+                    </Text>
                   </View>
                 </View>
                 <View style={styles.statusInfo}>
-                  <Text style={[styles.statusName, { color: theme.colors.textSecondary }]}>
-                    {status.user.displayName}
-                  </Text>
-                  <Text style={[styles.statusTime, { color: theme.colors.textSecondary }]}>
+                  <Text style={styles.statusName}>{status.user.name}</Text>
+                  <Text style={styles.statusTime}>
                     {formatTimeAgo(status.createdAt)}
                   </Text>
                 </View>
-                <Image source={{ uri: status.imageUrl }} style={[styles.statusPreview, { opacity: 0.6 }]} />
               </TouchableOpacity>
             ))}
-          </View>
+          </>
         )}
 
-        {/* Empty State */}
-        {recentStatuses.length === 0 && viewedStatuses.length === 0 && !myStatus && (
-          <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-            <View style={styles.emptyState}>
-              <Ionicons name="radio-button-on" size={64} color={theme.colors.textSecondary} />
-              <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>No Status Updates</Text>
-              <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                Be the first to share a status update with your friends!
-              </Text>
-            </View>
+        {recentStatuses.length === 0 && viewedStatuses.length === 0 && (
+          <View style={styles.emptyState}>
+            <Ionicons name="radio-button-on-outline" size={64} color={theme.colors.textSecondary} />
+            <Text style={styles.emptyStateText}>
+              No status updates yet. Be the first to share something!
+            </Text>
           </View>
         )}
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 16,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
-  section: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-  },
-  myStatusContainer: {
-    marginBottom: 8,
-  },
-  statusItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  avatarContainer: {
-    position: 'relative',
-    marginRight: 16,
-  },
-  avatarBorder: {
-    width: 66,
-    height: 66,
-    borderRadius: 33,
-    borderWidth: 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  addIcon: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statusInfo: {
-    flex: 1,
-  },
-  statusName: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  statusTime: {
-    fontSize: 14,
-  },
-  statusPreview: {
-    width: 50,
-    height: 50,
-    borderRadius: 8,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-});

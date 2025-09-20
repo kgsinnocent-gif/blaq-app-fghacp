@@ -1,195 +1,212 @@
 
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../hooks/useTheme';
-import ThemeToggle from '../../components/ThemeToggle';
 import { mockUsers, currentUserId } from '../../data/mockData';
 import { User } from '../../types';
-
-export default function ChatsScreen() {
-  const { theme } = useTheme();
-  const [chats] = useState<User[]>(mockUsers.filter(user => user.id !== currentUserId));
-
-  const formatLastSeen = (lastSeen?: Date) => {
-    if (!lastSeen) return '';
-    
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - lastSeen.getTime()) / (1000 * 60));
-    
-    if (diffInMinutes < 1) return 'Just now';
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    
-    const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays}d ago`;
-  };
-
-  const handleChatPress = (user: User) => {
-    console.log('Opening chat with:', user.displayName);
-    // In a real app, this would navigate to the chat screen
-  };
-
-  const styles = createStyles(theme);
-
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ThemeToggle />
-      
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.colors.text }]}>Chats</Text>
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {chats.length === 0 ? (
-          <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-            <View style={styles.emptyState}>
-              <Ionicons name="chatbubbles" size={64} color={theme.colors.textSecondary} />
-              <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>No Chats Yet</Text>
-              <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                Start a conversation with your friends from the Friends tab!
-              </Text>
-            </View>
-          </View>
-        ) : (
-          <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-            {chats.map((user, index) => (
-              <TouchableOpacity
-                key={user.id}
-                style={[
-                  styles.chatItem,
-                  { borderBottomColor: theme.colors.border },
-                  index === chats.length - 1 && { borderBottomWidth: 0 }
-                ]}
-                onPress={() => handleChatPress(user)}
-              >
-                <View style={styles.chatInfo}>
-                  <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>
-                    <Text style={styles.avatarText}>
-                      {user.displayName.charAt(0).toUpperCase()}
-                    </Text>
-                    {user.isOnline && (
-                      <View style={[styles.onlineIndicator, { backgroundColor: theme.colors.success }]} />
-                    )}
-                  </View>
-                  <View style={styles.chatDetails}>
-                    <View style={styles.chatHeader}>
-                      <Text style={[styles.chatName, { color: theme.colors.text }]}>
-                        {user.displayName}
-                      </Text>
-                      <Text style={[styles.chatTime, { color: theme.colors.textSecondary }]}>
-                        {user.isOnline ? 'Online' : formatLastSeen(user.lastSeen)}
-                      </Text>
-                    </View>
-                    <Text style={[styles.lastMessage, { color: theme.colors.textSecondary }]}>
-                      Tap to start chatting...
-                    </Text>
-                  </View>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
 
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.background,
   },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: theme.colors.text,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-  },
-  section: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
   },
   chatItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    paddingHorizontal: 20,
     paddingVertical: 16,
+    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
-  },
-  chatInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+    borderBottomColor: theme.colors.border,
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
-    position: 'relative',
+    marginRight: 12,
   },
   avatarText: {
-    color: '#FFFFFF',
-    fontSize: 20,
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  chatInfo: {
+    flex: 1,
+  },
+  chatName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: 4,
+  },
+  lastMessage: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    marginBottom: 2,
+  },
+  lastSeen: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+  },
+  chatMeta: {
+    alignItems: 'flex-end',
+  },
+  timestamp: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    marginBottom: 4,
+  },
+  unreadBadge: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  unreadText: {
+    color: 'white',
+    fontSize: 12,
     fontWeight: '600',
   },
   onlineIndicator: {
     position: 'absolute',
     bottom: 2,
     right: 2,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#4CAF50',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  chatDetails: {
-    flex: 1,
-  },
-  chatHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  chatName: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  chatTime: {
-    fontSize: 12,
-  },
-  lastMessage: {
-    fontSize: 14,
-    fontStyle: 'italic',
+    borderColor: theme.colors.surface,
   },
   emptyState: {
+    flex: 1,
     alignItems: 'center',
-    paddingVertical: 40,
+    justifyContent: 'center',
+    paddingHorizontal: 40,
   },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 14,
+  emptyStateText: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 20,
+    marginTop: 16,
   },
 });
+
+export default function ChatsScreen() {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
+  const [chats] = useState([
+    {
+      id: '1',
+      user: mockUsers.find(u => u.id === '2'),
+      lastMessage: 'Hey! How are you doing?',
+      timestamp: '2:30 PM',
+      unreadCount: 2,
+      isOnline: true,
+    },
+    {
+      id: '2',
+      user: mockUsers.find(u => u.id === '3'),
+      lastMessage: 'Thanks for the help earlier!',
+      timestamp: '1:15 PM',
+      unreadCount: 0,
+      isOnline: false,
+    },
+    {
+      id: '3',
+      user: mockUsers.find(u => u.id === '4'),
+      lastMessage: 'See you tomorrow 👋',
+      timestamp: '11:45 AM',
+      unreadCount: 1,
+      isOnline: true,
+    },
+  ]);
+
+  const formatLastSeen = () => {
+    return 'Last seen recently';
+  };
+
+  const handleChatPress = (user: User) => {
+    console.log('Opening chat with:', user.name);
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Chats</Text>
+      </View>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {chats.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="chatbubbles-outline" size={64} color={theme.colors.textSecondary} />
+            <Text style={styles.emptyStateText}>
+              No chats yet. Start a conversation with your friends!
+            </Text>
+          </View>
+        ) : (
+          chats.map((chat) => (
+            <TouchableOpacity
+              key={chat.id}
+              style={styles.chatItem}
+              onPress={() => handleChatPress(chat.user!)}
+            >
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {getInitials(chat.user?.name || 'U')}
+                </Text>
+                {chat.isOnline && <View style={styles.onlineIndicator} />}
+              </View>
+              
+              <View style={styles.chatInfo}>
+                <Text style={styles.chatName}>{chat.user?.name}</Text>
+                <Text style={styles.lastMessage} numberOfLines={1}>
+                  {chat.lastMessage}
+                </Text>
+                <Text style={styles.lastSeen}>{formatLastSeen()}</Text>
+              </View>
+              
+              <View style={styles.chatMeta}>
+                <Text style={styles.timestamp}>{chat.timestamp}</Text>
+                {chat.unreadCount > 0 && (
+                  <View style={styles.unreadBadge}>
+                    <Text style={styles.unreadText}>{chat.unreadCount}</Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
