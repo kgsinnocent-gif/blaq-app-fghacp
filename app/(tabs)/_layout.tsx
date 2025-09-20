@@ -54,6 +54,18 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="friends"
+        options={{
+          href: null, // Hide this tab
+        }}
+      />
+      <Tabs.Screen
+        name="home"
+        options={{
+          href: null, // Hide this tab
+        }}
+      />
     </Tabs>
   );
 }

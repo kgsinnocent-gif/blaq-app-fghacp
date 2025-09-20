@@ -1,111 +1,306 @@
 
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
-import { mockUsers, currentUserId, mockFriendRequests } from '../../data/mockData';
 import { User, FriendRequest } from '../../types';
+import { mockUsers, currentUserId, mockFriendRequests } from '../../data/mockData';
+
+export default function ChatsScreen() {
+  const { theme } = useTheme();
+  const [showAddFriend, setShowAddFriend] = useState(false);
+  const [showStartChat, setShowStartChat] = useState(false);
+  const [newFriendEmail, setNewFriendEmail] = useState('');
+  const styles = createStyles(theme);
+
+  const currentUser = mockUsers.find(user => user.id === currentUserId);
+  const friends = mockUsers.filter(user => user.id !== currentUserId);
+  const incomingRequests = mockFriendRequests.filter(req => req.toUser.id === currentUserId && req.status === 'pending');
+
+  const formatLastSeen = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+  };
+
+  const handleChatPress = (user: User) => {
+    console.log('Opening chat with:', user.displayName);
+    Alert.alert('Chat', `Opening chat with ${user.displayName}`);
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  const handleAddFriend = () => {
+    if (!newFriendEmail.trim()) {
+      Alert.alert('Error', 'Please enter an email address');
+      return;
+    }
+    
+    console.log('Adding friend:', newFriendEmail);
+    Alert.alert('Success', `Friend request sent to ${newFriendEmail}`);
+    setNewFriendEmail('');
+    setShowAddFriend(false);
+  };
+
+  const handleStartChatWithFriend = (friendId: string) => {
+    const friend = friends.find(f => f.id === friendId);
+    if (friend) {
+      handleChatPress(friend);
+    }
+    setShowStartChat(false);
+  };
+
+  const handleAcceptRequest = (requestId: string) => {
+    console.log('Accepting friend request:', requestId);
+    Alert.alert('Success', 'Friend request accepted!');
+  };
+
+  const handleDeclineRequest = (requestId: string) => {
+    console.log('Declining friend request:', requestId);
+    Alert.alert('Success', 'Friend request declined');
+  };
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Chats</Text>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => setShowAddFriend(true)}
+          >
+            <Ionicons name="person-add" size={24} color={theme.colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.startChatButton}
+            onPress={() => setShowStartChat(true)}
+          >
+            <Ionicons name="add" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Pending Friend Requests */}
+        {incomingRequests.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Pending Requests</Text>
+            {incomingRequests.map((request) => (
+              <View key={request.id} style={styles.requestCard}>
+                <View style={styles.userInfo}>
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>
+                      {getInitials(request.fromUser.displayName)}
+                    </Text>
+                  </View>
+                  <View style={styles.userDetails}>
+                    <Text style={styles.userName}>{request.fromUser.displayName}</Text>
+                    <Text style={styles.userEmail}>{request.fromUser.email}</Text>
+                  </View>
+                </View>
+                <View style={styles.requestActions}>
+                  <TouchableOpacity
+                    style={styles.acceptButton}
+                    onPress={() => handleAcceptRequest(request.id)}
+                  >
+                    <Ionicons name="checkmark" size={20} color={theme.colors.text} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.declineButton}
+                    onPress={() => handleDeclineRequest(request.id)}
+                  >
+                    <Ionicons name="close" size={20} color={theme.colors.text} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Recent Chats */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Recent Chats</Text>
+          {friends.map((user) => (
+            <TouchableOpacity
+              key={user.id}
+              style={styles.chatItem}
+              onPress={() => handleChatPress(user)}
+            >
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{getInitials(user.displayName)}</Text>
+                {user.isOnline && <View style={styles.onlineIndicator} />}
+              </View>
+              <View style={styles.chatInfo}>
+                <View style={styles.chatHeader}>
+                  <Text style={styles.chatName}>{user.displayName}</Text>
+                  <Text style={styles.chatTime}>
+                    {user.isOnline ? 'Online' : user.lastSeen ? formatLastSeen(user.lastSeen) : 'Offline'}
+                  </Text>
+                </View>
+                <Text style={styles.lastMessage}>Tap to start chatting</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+
+      {/* Add Friend Modal */}
+      <Modal
+        visible={showAddFriend}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowAddFriend(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add Friend</Text>
+              <TouchableOpacity onPress={() => setShowAddFriend(false)}>
+                <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter email address"
+              placeholderTextColor={theme.colors.textSecondary}
+              value={newFriendEmail}
+              onChangeText={setNewFriendEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            <TouchableOpacity style={styles.addButton} onPress={handleAddFriend}>
+              <Text style={styles.addButtonText}>Send Request</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Start Chat Modal */}
+      <Modal
+        visible={showStartChat}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowStartChat(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Start New Chat</Text>
+              <TouchableOpacity onPress={() => setShowStartChat(false)}>
+                <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.friendsList}>
+              {friends.map((friend) => (
+                <TouchableOpacity
+                  key={friend.id}
+                  style={styles.friendItem}
+                  onPress={() => handleStartChatWithFriend(friend.id)}
+                >
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>{getInitials(friend.displayName)}</Text>
+                    {friend.isOnline && <View style={styles.onlineIndicator} />}
+                  </View>
+                  <View style={styles.friendInfo}>
+                    <Text style={styles.friendName}>{friend.displayName}</Text>
+                    <Text style={styles.friendStatus}>
+                      {friend.isOnline ? 'Online' : friend.lastSeen ? formatLastSeen(friend.lastSeen) : 'Offline'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
+  );
+}
 
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
     color: theme.colors.text,
   },
   headerButtons: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
   headerButton: {
-    marginLeft: 16,
     padding: 8,
   },
   startChatButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
     backgroundColor: theme.colors.primary,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   content: {
     flex: 1,
+    paddingHorizontal: 20,
   },
-  chatItem: {
+  section: {
+    marginVertical: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: 12,
+  },
+  requestCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    justifyContent: 'space-between',
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    position: 'relative',
   },
   avatarText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  chatInfo: {
-    flex: 1,
-  },
-  chatName: {
-    fontSize: 16,
-    fontWeight: '600',
     color: theme.colors.text,
-    marginBottom: 4,
-  },
-  lastMessage: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    marginBottom: 2,
-  },
-  lastSeen: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-  },
-  chatMeta: {
-    alignItems: 'flex-end',
-  },
-  timestamp: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-    marginBottom: 4,
-  },
-  unreadBadge: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  unreadText: {
-    color: 'white',
-    fontSize: 12,
+    fontSize: 18,
     fontWeight: '600',
   },
   onlineIndicator: {
@@ -115,74 +310,120 @@ const createStyles = (theme: any) => StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#4CAF50',
+    backgroundColor: theme.colors.success,
     borderWidth: 2,
     borderColor: theme.colors.surface,
   },
-  emptyState: {
+  userDetails: {
     flex: 1,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: 2,
+  },
+  userEmail: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
+  requestActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  acceptButton: {
+    backgroundColor: theme.colors.success,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 40,
   },
-  emptyStateText: {
+  declineButton: {
+    backgroundColor: theme.colors.error,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  chatInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  chatHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  chatName: {
     fontSize: 16,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-    marginTop: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
   },
-  // Modal styles
+  chatTime: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+  },
+  lastMessage: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: theme.colors.surface,
-    borderRadius: 16,
-    padding: 24,
-    width: '90%',
-    maxWidth: 400,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '600',
     color: theme.colors.text,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 12,
   },
   input: {
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 8,
+    backgroundColor: theme.colors.inputBackground,
+    borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
     color: theme.colors.text,
-    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginBottom: 16,
   },
   addButton: {
     backgroundColor: theme.colors.primary,
-    borderRadius: 8,
-    paddingVertical: 12,
+    borderRadius: 12,
+    paddingVertical: 14,
     alignItems: 'center',
-    marginBottom: 16,
   },
   addButtonText: {
-    color: 'white',
+    color: theme.colors.text,
     fontSize: 16,
     fontWeight: '600',
+  },
+  friendsList: {
+    maxHeight: 300,
   },
   friendItem: {
     flexDirection: 'row',
@@ -201,338 +442,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.text,
     marginBottom: 2,
   },
-  friendEmail: {
+  friendStatus: {
     fontSize: 14,
     color: theme.colors.textSecondary,
   },
-  chatButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  chatButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginHorizontal: 6,
-  },
-  cancelButton: {
-    backgroundColor: theme.colors.border,
-  },
-  cancelButtonText: {
-    color: theme.colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
 });
-
-export default function ChatsScreen() {
-  const { theme } = useTheme();
-  const styles = createStyles(theme);
-  const [showFriendsModal, setShowFriendsModal] = useState(false);
-  const [showStartChatModal, setShowStartChatModal] = useState(false);
-  const [newFriendEmail, setNewFriendEmail] = useState('');
-  
-  const [chats] = useState([
-    {
-      id: '1',
-      user: mockUsers.find(u => u.id === '2'),
-      lastMessage: 'Hey! How are you doing?',
-      timestamp: '2:30 PM',
-      unreadCount: 2,
-      isOnline: true,
-    },
-    {
-      id: '2',
-      user: mockUsers.find(u => u.id === '3'),
-      lastMessage: 'Thanks for the help earlier!',
-      timestamp: '1:15 PM',
-      unreadCount: 0,
-      isOnline: false,
-    },
-    {
-      id: '3',
-      user: mockUsers.find(u => u.id === '4'),
-      lastMessage: 'See you tomorrow 👋',
-      timestamp: '11:45 AM',
-      unreadCount: 1,
-      isOnline: true,
-    },
-  ]);
-
-  const friends = mockUsers.filter(user => user.id !== currentUserId);
-  const incomingRequests = mockFriendRequests.filter(req => 
-    req.toUserId === currentUserId && req.status === 'pending'
-  );
-  const sentRequests = mockFriendRequests.filter(req => 
-    req.fromUserId === currentUserId && req.status === 'pending'
-  );
-
-  const formatLastSeen = () => {
-    return 'Last seen recently';
-  };
-
-  const handleChatPress = (user: User) => {
-    console.log('Opening chat with:', user.name);
-  };
-
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  };
-
-  const handleAddFriend = () => {
-    if (!newFriendEmail.trim()) {
-      Alert.alert('Error', 'Please enter an email address');
-      return;
-    }
-
-    if (!newFriendEmail.includes('@')) {
-      Alert.alert('Error', 'Please enter a valid email address');
-      return;
-    }
-
-    console.log('Adding friend:', newFriendEmail);
-    Alert.alert('Success', `Friend request sent to ${newFriendEmail}`);
-    setNewFriendEmail('');
-  };
-
-  const handleStartChatWithFriend = (friendId: string) => {
-    console.log('Starting chat with friend:', friendId);
-    setShowStartChatModal(false);
-    Alert.alert('Chat', 'Opening chat...');
-  };
-
-  const handleAcceptRequest = (requestId: string) => {
-    console.log('Accepting friend request:', requestId);
-    Alert.alert('Success', 'Friend request accepted!');
-  };
-
-  const handleDeclineRequest = (requestId: string) => {
-    console.log('Declining friend request:', requestId);
-    Alert.alert('Request declined');
-  };
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Chats</Text>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity 
-            style={styles.headerButton}
-            onPress={() => setShowFriendsModal(true)}
-          >
-            <Ionicons name="person-add" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.startChatButton}
-            onPress={() => setShowStartChatModal(true)}
-          >
-            <Ionicons name="add" size={20} color="white" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {chats.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="chatbubbles-outline" size={64} color={theme.colors.textSecondary} />
-            <Text style={styles.emptyStateText}>
-              No chats yet. Start a conversation with your friends!
-            </Text>
-          </View>
-        ) : (
-          chats.map((chat) => (
-            <TouchableOpacity
-              key={chat.id}
-              style={styles.chatItem}
-              onPress={() => handleChatPress(chat.user!)}
-            >
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {getInitials(chat.user?.name || 'U')}
-                </Text>
-                {chat.isOnline && <View style={styles.onlineIndicator} />}
-              </View>
-              
-              <View style={styles.chatInfo}>
-                <Text style={styles.chatName}>{chat.user?.name}</Text>
-                <Text style={styles.lastMessage} numberOfLines={1}>
-                  {chat.lastMessage}
-                </Text>
-                <Text style={styles.lastSeen}>{formatLastSeen()}</Text>
-              </View>
-              
-              <View style={styles.chatMeta}>
-                <Text style={styles.timestamp}>{chat.timestamp}</Text>
-                {chat.unreadCount > 0 && (
-                  <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadText}>{chat.unreadCount}</Text>
-                  </View>
-                )}
-              </View>
-            </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
-
-      {/* Friends Modal */}
-      <Modal
-        visible={showFriendsModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowFriendsModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Friends</Text>
-            
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Add New Friend</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter email address"
-                placeholderTextColor={theme.colors.textSecondary}
-                value={newFriendEmail}
-                onChangeText={setNewFriendEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              <TouchableOpacity style={styles.addButton} onPress={handleAddFriend}>
-                <Text style={styles.addButtonText}>Send Friend Request</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Your Friends ({friends.length})</Text>
-              <ScrollView style={{ maxHeight: 200 }}>
-                {friends.map((friend) => (
-                  <View key={friend.id} style={styles.friendItem}>
-                    <View style={styles.avatar}>
-                      <Text style={styles.avatarText}>{getInitials(friend.name)}</Text>
-                    </View>
-                    <View style={styles.friendInfo}>
-                      <Text style={styles.friendName}>{friend.name}</Text>
-                      <Text style={styles.friendEmail}>{friend.email}</Text>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.chatButton}
-                      onPress={() => handleStartChatWithFriend(friend.id)}
-                    >
-                      <Text style={styles.chatButtonText}>Chat</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
-
-            {incomingRequests.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Incoming Requests ({incomingRequests.length})</Text>
-                <ScrollView style={{ maxHeight: 150 }}>
-                  {incomingRequests.map((request) => {
-                    const sender = mockUsers.find(user => user.id === request.fromUserId);
-                    return (
-                      <View key={request.id} style={styles.friendItem}>
-                        <View style={styles.avatar}>
-                          <Text style={styles.avatarText}>{getInitials(sender?.name || 'U')}</Text>
-                        </View>
-                        <View style={styles.friendInfo}>
-                          <Text style={styles.friendName}>{sender?.name}</Text>
-                          <Text style={styles.friendEmail}>{sender?.email}</Text>
-                        </View>
-                        <TouchableOpacity
-                          style={[styles.chatButton, { backgroundColor: '#4CAF50', marginRight: 8 }]}
-                          onPress={() => handleAcceptRequest(request.id)}
-                        >
-                          <Text style={styles.chatButtonText}>Accept</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[styles.chatButton, { backgroundColor: '#FF6B6B' }]}
-                          onPress={() => handleDeclineRequest(request.id)}
-                        >
-                          <Text style={styles.chatButtonText}>Decline</Text>
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-            )}
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setShowFriendsModal(false)}
-              >
-                <Text style={styles.cancelButtonText}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Start Chat Modal */}
-      <Modal
-        visible={showStartChatModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowStartChatModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Start New Chat</Text>
-            
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Select a Friend</Text>
-              <ScrollView style={{ maxHeight: 300 }}>
-                {friends.length === 0 ? (
-                  <Text style={styles.emptyStateText}>
-                    No friends available. Add some friends first!
-                  </Text>
-                ) : (
-                  friends.map((friend) => (
-                    <TouchableOpacity
-                      key={friend.id}
-                      style={styles.friendItem}
-                      onPress={() => handleStartChatWithFriend(friend.id)}
-                    >
-                      <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>{getInitials(friend.name)}</Text>
-                      </View>
-                      <View style={styles.friendInfo}>
-                        <Text style={styles.friendName}>{friend.name}</Text>
-                        <Text style={styles.friendEmail}>{friend.email}</Text>
-                      </View>
-                      <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-                    </TouchableOpacity>
-                  ))
-                )}
-              </ScrollView>
-            </View>
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setShowStartChatModal(false)}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
-  );
-}

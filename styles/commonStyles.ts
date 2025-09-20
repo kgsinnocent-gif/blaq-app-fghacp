@@ -5,33 +5,16 @@ export const colors = {
   primary: '#7C3AED',    // Vibrant purple as specified
   secondary: '#8B5CF6',  // Lighter purple
   accent: '#A78BFA',     // Even lighter purple
-  background: '#0F0F23',  // Dark background
-  backgroundAlt: '#1A1A2E',  // Slightly lighter dark
-  surface: '#16213E',    // Card/surface color
-  text: '#FFFFFF',       // White text
-  textSecondary: '#A1A1AA', // Gray text
+  background: '#FFFFFF',  // Light background (default)
+  backgroundAlt: '#F9FAFB',  // Slightly darker light
+  surface: '#FFFFFF',    // Card/surface color
+  text: '#111827',       // Dark text
+  textSecondary: '#6B7280', // Gray text
   success: '#10B981',    // Green
   error: '#EF4444',      // Red
   warning: '#F59E0B',    // Orange
-  border: '#374151',     // Border color
-  inputBackground: '#1F2937', // Input background
-  
-  // Light theme colors
-  light: {
-    primary: '#7C3AED',
-    secondary: '#8B5CF6',
-    accent: '#A78BFA',
-    background: '#FFFFFF',
-    backgroundAlt: '#F9FAFB',
-    surface: '#FFFFFF',
-    text: '#111827',
-    textSecondary: '#6B7280',
-    success: '#10B981',
-    error: '#EF4444',
-    warning: '#F59E0B',
-    border: '#E5E7EB',
-    inputBackground: '#F9FAFB',
-  }
+  border: '#E5E7EB',     // Border color
+  inputBackground: '#F9FAFB', // Input background
 };
 
 export const buttonStyles = StyleSheet.create({

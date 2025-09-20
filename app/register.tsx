@@ -16,12 +16,12 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const styles = createStyles(theme);
 
-  const handleRegister = async () => {
-    console.log('Register attempt with email:', email, 'displayName:', displayName);
+  const handleRegister = () => {
+    console.log('Register attempt with:', email, displayName);
     
-    if (!email || !displayName || !password || !confirmPassword) {
+    if (!email.trim() || !displayName.trim() || !password.trim() || !confirmPassword.trim()) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
@@ -36,22 +36,14 @@ export default function RegisterScreen() {
       return;
     }
 
-    setIsLoading(true);
-    
-    // Simulate registration process
-    setTimeout(() => {
-      console.log('Registration successful, navigating to main app');
-      setIsLoading(false);
-      router.replace('/(tabs)');
-    }, 1000);
+    console.log('Registration successful, navigating to chats');
+    router.replace('/(tabs)/chats');
   };
 
   const navigateToLogin = () => {
-    console.log('Navigating back to login screen');
-    router.back();
+    console.log('Navigating to login screen');
+    router.push('/login');
   };
-
-  const styles = createStyles(theme);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -59,24 +51,28 @@ export default function RegisterScreen() {
       
       <View style={styles.content}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={navigateToLogin}>
-            <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
-          </TouchableOpacity>
-          <Text style={[styles.title, { color: theme.colors.text }]}>Create Account</Text>
-          <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-            Join BlaqApp and connect with friends
-          </Text>
+          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.subtitle}>Join BlaqApp today</Text>
         </View>
 
         <View style={styles.form}>
           <View style={styles.inputContainer}>
+            <Text style={styles.label}>Display Name</Text>
             <TextInput
-              style={[styles.input, { 
-                backgroundColor: theme.colors.inputBackground,
-                borderColor: theme.colors.border,
-                color: theme.colors.text 
-              }]}
-              placeholder="Email"
+              style={styles.input}
+              placeholder="Enter your display name"
+              placeholderTextColor={theme.colors.textSecondary}
+              value={displayName}
+              onChangeText={setDisplayName}
+              autoCapitalize="words"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your email"
               placeholderTextColor={theme.colors.textSecondary}
               value={email}
               onChangeText={setEmail}
@@ -87,90 +83,63 @@ export default function RegisterScreen() {
           </View>
 
           <View style={styles.inputContainer}>
-            <TextInput
-              style={[styles.input, { 
-                backgroundColor: theme.colors.inputBackground,
-                borderColor: theme.colors.border,
-                color: theme.colors.text 
-              }]}
-              placeholder="Display Name"
-              placeholderTextColor={theme.colors.textSecondary}
-              value={displayName}
-              onChangeText={setDisplayName}
-              autoComplete="name"
-            />
+            <Text style={styles.label}>Password</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Enter your password"
+                placeholderTextColor={theme.colors.textSecondary}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoComplete="new-password"
+              />
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Ionicons
+                  name={showPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color={theme.colors.textSecondary}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.inputContainer}>
-            <TextInput
-              style={[styles.input, { 
-                backgroundColor: theme.colors.inputBackground,
-                borderColor: theme.colors.border,
-                color: theme.colors.text 
-              }]}
-              placeholder="Password"
-              placeholderTextColor={theme.colors.textSecondary}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              autoComplete="password-new"
-            />
-            <TouchableOpacity
-              style={styles.eyeIcon}
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              <Ionicons
-                name={showPassword ? 'eye-off' : 'eye'}
-                size={20}
-                color={theme.colors.textSecondary}
+            <Text style={styles.label}>Confirm Password</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Confirm your password"
+                placeholderTextColor={theme.colors.textSecondary}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
+                autoComplete="new-password"
               />
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                <Ionicons
+                  name={showConfirmPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color={theme.colors.textSecondary}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={[styles.input, { 
-                backgroundColor: theme.colors.inputBackground,
-                borderColor: theme.colors.border,
-                color: theme.colors.text 
-              }]}
-              placeholder="Confirm Password"
-              placeholderTextColor={theme.colors.textSecondary}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showConfirmPassword}
-              autoComplete="password-new"
-            />
-            <TouchableOpacity
-              style={styles.eyeIcon}
-              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              <Ionicons
-                name={showConfirmPassword ? 'eye-off' : 'eye'}
-                size={20}
-                color={theme.colors.textSecondary}
-              />
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.registerButton, { backgroundColor: theme.colors.primary }]}
-            onPress={handleRegister}
-            disabled={isLoading}
-          >
-            <Text style={styles.registerButtonText}>
-              {isLoading ? 'Creating Account...' : 'Create Account'}
-            </Text>
+          <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
+            <Text style={styles.registerButtonText}>Sign Up</Text>
           </TouchableOpacity>
 
-          <View style={styles.loginContainer}>
-            <Text style={[styles.loginText, { color: theme.colors.textSecondary }]}>
-              Already have an account?{' '}
-            </Text>
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Already have an account? </Text>
             <TouchableOpacity onPress={navigateToLogin}>
-              <Text style={[styles.loginLink, { color: theme.colors.primary }]}>
-                Sign In
-              </Text>
+              <Text style={styles.linkText}>Log In</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -185,70 +154,89 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
     justifyContent: 'center',
+    paddingHorizontal: 24,
   },
   header: {
     alignItems: 'center',
     marginBottom: 48,
-    position: 'relative',
-  },
-  backButton: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    padding: 8,
   },
   title: {
     fontSize: 32,
     fontWeight: '700',
+    color: theme.colors.text,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    textAlign: 'center',
+    color: theme.colors.textSecondary,
   },
   form: {
     width: '100%',
   },
   inputContainer: {
-    position: 'relative',
-    marginBottom: 16,
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: 8,
   },
   input: {
+    backgroundColor: theme.colors.inputBackground,
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 14,
     fontSize: 16,
+    color: theme.colors.text,
     borderWidth: 1,
+    borderColor: theme.colors.border,
   },
-  eyeIcon: {
-    position: 'absolute',
-    right: 16,
-    top: 18,
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.inputBackground,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: theme.colors.text,
+  },
+  eyeButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
   registerButton: {
+    backgroundColor: theme.colors.primary,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 8,
-    marginBottom: 24,
   },
   registerButtonText: {
-    color: '#FFFFFF',
+    color: theme.colors.text,
     fontSize: 16,
     fontWeight: '600',
   },
-  loginContainer: {
+  footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 32,
   },
-  loginText: {
-    fontSize: 14,
+  footerText: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
   },
-  loginLink: {
-    fontSize: 14,
+  linkText: {
+    fontSize: 16,
+    color: theme.colors.primary,
     fontWeight: '600',
   },
 });
