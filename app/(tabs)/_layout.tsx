@@ -10,21 +10,14 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.text,
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.border,
           borderTopWidth: 1,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 70,
         },
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.textSecondary,
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
-        },
+        headerShown: false,
       }}
     >
       <Tabs.Screen
@@ -57,13 +50,13 @@ export default function TabLayout() {
       <Tabs.Screen
         name="friends"
         options={{
-          href: null, // Hide this tab
+          href: null, // This hides the tab
         }}
       />
       <Tabs.Screen
         name="home"
         options={{
-          href: null, // Hide this tab
+          href: null, // This hides the tab
         }}
       />
     </Tabs>

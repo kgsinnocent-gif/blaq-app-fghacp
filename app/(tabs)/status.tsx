@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, Alert, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -11,6 +11,9 @@ import { Status } from '../../types';
 export default function StatusScreen() {
   const { theme } = useTheme();
   const [statuses, setStatuses] = useState(mockStatuses);
+  const [showCreateStatus, setShowCreateStatus] = useState(false);
+  const [statusCaption, setStatusCaption] = useState('');
+  const [statusType, setStatusType] = useState<'image' | 'text'>('text');
   const styles = createStyles(theme);
 
   const myStatuses = statuses.filter(status => status.userId === currentUserId);
@@ -20,10 +23,10 @@ export default function StatusScreen() {
 
   const handleShareStatus = () => {
     console.log('Share status button pressed');
-    handleCreateStatus();
+    setShowCreateStatus(true);
   };
 
-  const handleCreateStatus = async () => {
+  const handleCreateImageStatus = async () => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
@@ -41,13 +44,30 @@ export default function StatusScreen() {
 
       if (!result.canceled && result.assets[0]) {
         console.log('Image selected for status:', result.assets[0].uri);
-        Alert.alert('Status Created', 'Your status has been posted!');
-        // Here you would normally upload the image and create the status
+        setStatusType('image');
+        setShowCreateStatus(true);
       }
     } catch (error) {
-      console.error('Error creating status:', error);
-      Alert.alert('Error', 'Failed to create status');
+      console.error('Error creating image status:', error);
+      Alert.alert('Error', 'Failed to create image status');
     }
+  };
+
+  const handleCreateTextStatus = () => {
+    setStatusType('text');
+    setShowCreateStatus(true);
+  };
+
+  const handlePostStatus = () => {
+    if (statusType === 'text' && !statusCaption.trim()) {
+      Alert.alert('Error', 'Please enter some text for your status');
+      return;
+    }
+    
+    console.log('Posting status:', { type: statusType, caption: statusCaption });
+    Alert.alert('Success', 'Your status has been posted!');
+    setStatusCaption('');
+    setShowCreateStatus(false);
   };
 
   const handleViewStatus = (status: Status) => {
@@ -83,18 +103,12 @@ export default function StatusScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.header}>
         <Text style={styles.title}>Status</Text>
-        <TouchableOpacity
-          style={styles.shareButton}
-          onPress={handleShareStatus}
-        >
-          <Ionicons name="camera" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* My Status */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.myStatusCard} onPress={handleCreateStatus}>
+          <TouchableOpacity style={styles.myStatusCard} onPress={handleShareStatus}>
             <View style={styles.statusAvatar}>
               <Text style={styles.avatarText}>
                 {getInitials('Kagiso')}
@@ -177,6 +191,77 @@ export default function StatusScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Create Status Modal */}
+      <Modal
+        visible={showCreateStatus}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowCreateStatus(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Create Status</Text>
+              <TouchableOpacity onPress={() => setShowCreateStatus(false)}>
+                <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.statusTypeButtons}>
+              <TouchableOpacity 
+                style={styles.statusTypeButton}
+                onPress={handleCreateImageStatus}
+              >
+                <Ionicons name="image" size={24} color={theme.colors.primary} />
+                <Text style={styles.statusTypeText}>Photo Status</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.statusTypeButton}
+                onPress={handleCreateTextStatus}
+              >
+                <Ionicons name="text" size={24} color={theme.colors.primary} />
+                <Text style={styles.statusTypeText}>Text Status</Text>
+              </TouchableOpacity>
+            </View>
+
+            {statusType === 'text' && (
+              <>
+                <TextInput
+                  style={styles.captionInput}
+                  placeholder="What's on your mind?"
+                  placeholderTextColor={theme.colors.textSecondary}
+                  value={statusCaption}
+                  onChangeText={setStatusCaption}
+                  multiline
+                  maxLength={200}
+                />
+                <TouchableOpacity style={styles.postButton} onPress={handlePostStatus}>
+                  <Text style={styles.postButtonText}>Post Status</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {statusType === 'image' && (
+              <>
+                <TextInput
+                  style={styles.captionInput}
+                  placeholder="Add a caption..."
+                  placeholderTextColor={theme.colors.textSecondary}
+                  value={statusCaption}
+                  onChangeText={setStatusCaption}
+                  multiline
+                  maxLength={200}
+                />
+                <TouchableOpacity style={styles.postButton} onPress={handlePostStatus}>
+                  <Text style={styles.postButtonText}>Post Status</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -198,14 +283,6 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     color: theme.colors.text,
-  },
-  shareButton: {
-    backgroundColor: theme.colors.primary,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   content: {
     flex: 1,
@@ -310,5 +387,72 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: theme.colors.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: theme.colors.text,
+  },
+  statusTypeButtons: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 20,
+  },
+  statusTypeButton: {
+    flex: 1,
+    backgroundColor: theme.colors.inputBackground,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  statusTypeText: {
+    fontSize: 14,
+    color: theme.colors.text,
+    marginTop: 8,
+    fontWeight: '600',
+  },
+  captionInput: {
+    backgroundColor: theme.colors.inputBackground,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: theme.colors.text,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginBottom: 16,
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  postButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  postButtonText: {
+    color: theme.colors.text,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

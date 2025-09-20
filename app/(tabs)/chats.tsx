@@ -16,7 +16,6 @@ export default function ChatsScreen() {
 
   const currentUser = mockUsers.find(user => user.id === currentUserId);
   const friends = mockUsers.filter(user => user.id !== currentUserId);
-  const incomingRequests = mockFriendRequests.filter(req => req.toUser.id === currentUserId && req.status === 'pending');
 
   const formatLastSeen = (date: Date) => {
     const now = new Date();
@@ -34,6 +33,14 @@ export default function ChatsScreen() {
   const handleChatPress = (user: User) => {
     console.log('Opening chat with:', user.displayName);
     Alert.alert('Chat', `Opening chat with ${user.displayName}`);
+  };
+
+  const handleUserProfilePress = (user: User) => {
+    console.log('Opening user profile:', user.displayName);
+    Alert.alert('User Profile', `Viewing ${user.displayName}'s profile\n\nEmail: ${user.email}\nMessage: Hey there! I am using BlaqApp.`, [
+      { text: 'Message', onPress: () => handleChatPress(user) },
+      { text: 'Close', style: 'cancel' }
+    ]);
   };
 
   const getInitials = (name: string) => {
@@ -60,16 +67,6 @@ export default function ChatsScreen() {
     setShowStartChat(false);
   };
 
-  const handleAcceptRequest = (requestId: string) => {
-    console.log('Accepting friend request:', requestId);
-    Alert.alert('Success', 'Friend request accepted!');
-  };
-
-  const handleDeclineRequest = (requestId: string) => {
-    console.log('Declining friend request:', requestId);
-    Alert.alert('Success', 'Friend request declined');
-  };
-
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.header}>
@@ -91,42 +88,6 @@ export default function ChatsScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Pending Friend Requests */}
-        {incomingRequests.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Pending Requests</Text>
-            {incomingRequests.map((request) => (
-              <View key={request.id} style={styles.requestCard}>
-                <View style={styles.userInfo}>
-                  <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>
-                      {getInitials(request.fromUser.displayName)}
-                    </Text>
-                  </View>
-                  <View style={styles.userDetails}>
-                    <Text style={styles.userName}>{request.fromUser.displayName}</Text>
-                    <Text style={styles.userEmail}>{request.fromUser.email}</Text>
-                  </View>
-                </View>
-                <View style={styles.requestActions}>
-                  <TouchableOpacity
-                    style={styles.acceptButton}
-                    onPress={() => handleAcceptRequest(request.id)}
-                  >
-                    <Ionicons name="checkmark" size={20} color={theme.colors.text} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.declineButton}
-                    onPress={() => handleDeclineRequest(request.id)}
-                  >
-                    <Ionicons name="close" size={20} color={theme.colors.text} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-
         {/* Recent Chats */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Chats</Text>
@@ -136,13 +97,18 @@ export default function ChatsScreen() {
               style={styles.chatItem}
               onPress={() => handleChatPress(user)}
             >
-              <View style={styles.avatar}>
+              <TouchableOpacity 
+                style={styles.avatar}
+                onPress={() => handleUserProfilePress(user)}
+              >
                 <Text style={styles.avatarText}>{getInitials(user.displayName)}</Text>
                 {user.isOnline && <View style={styles.onlineIndicator} />}
-              </View>
+              </TouchableOpacity>
               <View style={styles.chatInfo}>
                 <View style={styles.chatHeader}>
-                  <Text style={styles.chatName}>{user.displayName}</Text>
+                  <TouchableOpacity onPress={() => handleUserProfilePress(user)}>
+                    <Text style={styles.chatName}>{user.displayName}</Text>
+                  </TouchableOpacity>
                   <Text style={styles.chatTime}>
                     {user.isOnline ? 'Online' : user.lastSeen ? formatLastSeen(user.lastSeen) : 'Offline'}
                   </Text>
@@ -207,12 +173,17 @@ export default function ChatsScreen() {
                   style={styles.friendItem}
                   onPress={() => handleStartChatWithFriend(friend.id)}
                 >
-                  <View style={styles.avatar}>
+                  <TouchableOpacity 
+                    style={styles.avatar}
+                    onPress={() => handleUserProfilePress(friend)}
+                  >
                     <Text style={styles.avatarText}>{getInitials(friend.displayName)}</Text>
                     {friend.isOnline && <View style={styles.onlineIndicator} />}
-                  </View>
+                  </TouchableOpacity>
                   <View style={styles.friendInfo}>
-                    <Text style={styles.friendName}>{friend.displayName}</Text>
+                    <TouchableOpacity onPress={() => handleUserProfilePress(friend)}>
+                      <Text style={styles.friendName}>{friend.displayName}</Text>
+                    </TouchableOpacity>
                     <Text style={styles.friendStatus}>
                       {friend.isOnline ? 'Online' : friend.lastSeen ? formatLastSeen(friend.lastSeen) : 'Offline'}
                     </Text>
@@ -274,19 +245,12 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.text,
     marginBottom: 12,
   },
-  requestCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
+  chatItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
   avatar: {
     width: 50,
@@ -313,46 +277,6 @@ const createStyles = (theme: any) => StyleSheet.create({
     backgroundColor: theme.colors.success,
     borderWidth: 2,
     borderColor: theme.colors.surface,
-  },
-  userDetails: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 2,
-  },
-  userEmail: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-  },
-  requestActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  acceptButton: {
-    backgroundColor: theme.colors.success,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  declineButton: {
-    backgroundColor: theme.colors.error,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chatItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   chatInfo: {
     flex: 1,

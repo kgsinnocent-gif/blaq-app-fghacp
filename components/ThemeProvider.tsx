@@ -1,16 +1,73 @@
 
-import React from 'react';
-import { ThemeContext, useThemeState } from '../hooks/useTheme';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Theme } from '../types';
+import { colors } from '../styles/commonStyles';
 
-interface ThemeProviderProps {
-  children: React.ReactNode;
+interface ThemeContextType {
+  theme: Theme;
+  toggleTheme: () => void;
 }
 
-export default function ThemeProvider({ children }: ThemeProviderProps) {
-  const themeState = useThemeState();
+export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+};
+
+const lightTheme: Theme = {
+  isDark: false,
+  colors: {
+    primary: colors.primary,
+    secondary: colors.secondary,
+    accent: colors.accent,
+    background: colors.light.background,
+    backgroundAlt: colors.light.backgroundAlt,
+    surface: colors.light.surface,
+    text: colors.light.text,
+    textSecondary: colors.light.textSecondary,
+    success: colors.success,
+    error: colors.error,
+    warning: colors.warning,
+    border: colors.light.border,
+    inputBackground: colors.light.inputBackground,
+  },
+};
+
+const darkTheme: Theme = {
+  isDark: true,
+  colors: {
+    primary: colors.primary,
+    secondary: colors.secondary,
+    accent: colors.accent,
+    background: colors.dark.background,
+    backgroundAlt: colors.dark.backgroundAlt,
+    surface: colors.dark.surface,
+    text: colors.dark.text,
+    textSecondary: colors.dark.textSecondary,
+    success: colors.success,
+    error: colors.error,
+    warning: colors.warning,
+    border: colors.dark.border,
+    inputBackground: colors.dark.inputBackground,
+  },
+};
+
+export default function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [isDark, setIsDark] = useState(false);
+
+  const theme = isDark ? darkTheme : lightTheme;
+
+  const toggleTheme = () => {
+    console.log('Toggling theme from', isDark ? 'dark' : 'light', 'to', isDark ? 'light' : 'dark');
+    setIsDark(!isDark);
+  };
 
   return (
-    <ThemeContext.Provider value={themeState}>
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
