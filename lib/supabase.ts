@@ -12,6 +12,8 @@ export const isSupabaseConfigured = () => {
   return supabaseUrl && supabaseAnonKey && supabaseUrl !== '' && supabaseAnonKey !== '';
 };
 
+console.log('Supabase configuration status:', isSupabaseConfigured());
+
 // Database types for TypeScript
 export interface Database {
   public: {

@@ -49,7 +49,7 @@ const darkTheme: Theme = {
 };
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(false); // Start with light theme
 
   const theme = isDark ? darkTheme : lightTheme;
 

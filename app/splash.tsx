@@ -43,7 +43,10 @@ export default function SplashScreen() {
       router.replace('/login');
     }, 3000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      console.log('Splash screen unmounting');
+      clearTimeout(timer);
+    };
   }, []);
 
   return (

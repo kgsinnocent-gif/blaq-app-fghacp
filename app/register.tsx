@@ -78,6 +78,11 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  errorText: {
+    color: theme.colors.error,
+    fontSize: 14,
+    marginTop: 8,
+  },
   supabaseNotice: {
     backgroundColor: theme.colors.surface,
     borderRadius: 12,
@@ -102,6 +107,7 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   
   const router = useRouter();
   const { theme } = useTheme();
@@ -109,18 +115,20 @@ export default function RegisterScreen() {
   const styles = createStyles(theme);
 
   const handleRegister = async () => {
+    setError('');
+    
     if (!email || !displayName || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+      setError('Please fill in all fields');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      setError('Passwords do not match');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      setError('Password must be at least 6 characters');
       return;
     }
 
@@ -132,25 +140,16 @@ export default function RegisterScreen() {
       
       if (error) {
         console.log('Registration error:', error.message);
-        Alert.alert('Registration Failed', error.message);
+        setError(error.message);
       } else {
         console.log('Registration successful');
-        Alert.alert(
-          'Success',
-          isConfigured 
-            ? 'Account created successfully! Please check your email to verify your account.'
-            : 'Account created successfully! You can now sign in.',
-          [
-            {
-              text: 'OK',
-              onPress: () => router.replace('/login'),
-            },
-          ]
-        );
+        Alert.alert('Success', 'Account created successfully! Please sign in.', [
+          { text: 'OK', onPress: () => router.replace('/login') }
+        ]);
       }
     } catch (err) {
       console.log('Registration exception:', err);
-      Alert.alert('Error', 'An unexpected error occurred');
+      setError('An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -158,7 +157,7 @@ export default function RegisterScreen() {
 
   const navigateToLogin = () => {
     console.log('Navigating to login screen');
-    router.push('/login');
+    router.replace('/login');
   };
 
   return (
@@ -167,7 +166,7 @@ export default function RegisterScreen() {
       
       <View style={styles.content}>
         <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>Join BlaqApp and start connecting</Text>
+        <Text style={styles.subtitle}>Join BlaqApp today</Text>
 
         {!isConfigured && (
           <View style={styles.supabaseNotice}>
@@ -180,6 +179,18 @@ export default function RegisterScreen() {
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
+            placeholder="Display Name"
+            placeholderTextColor={theme.colors.textSecondary}
+            value={displayName}
+            onChangeText={setDisplayName}
+            autoCapitalize="words"
+            autoComplete="name"
+          />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
             placeholder="Email"
             placeholderTextColor={theme.colors.textSecondary}
             value={email}
@@ -187,17 +198,6 @@ export default function RegisterScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Display Name"
-            placeholderTextColor={theme.colors.textSecondary}
-            value={displayName}
-            onChangeText={setDisplayName}
-            autoComplete="name"
           />
         </View>
 
@@ -249,13 +249,15 @@ export default function RegisterScreen() {
           </View>
         </View>
 
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
         <TouchableOpacity
           style={styles.button}
           onPress={handleRegister}
           disabled={loading}
         >
           <Text style={styles.buttonText}>
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading ? 'Creating Account...' : 'Sign Up'}
           </Text>
         </TouchableOpacity>
 

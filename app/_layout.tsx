@@ -15,6 +15,8 @@ export default function RootLayout() {
   const [storedEmulate, setStoredEmulate] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('RootLayout mounted');
+    
     // Set up global error logging
     setupErrorLogging();
 
