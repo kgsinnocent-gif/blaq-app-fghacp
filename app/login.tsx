@@ -27,9 +27,9 @@ export default function LoginScreen() {
     
     // Simulate login process
     setTimeout(() => {
-      console.log('Login successful, navigating to main app');
+      console.log('Login successful, navigating to home screen');
       setIsLoading(false);
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/home');
     }, 1000);
   };
 

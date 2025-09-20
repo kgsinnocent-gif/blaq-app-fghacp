@@ -9,30 +9,39 @@ export default function SplashScreen() {
   const router = useRouter();
   const fadeAnim = new Animated.Value(0);
   const scaleAnim = new Animated.Value(0.8);
+  const taglineAnim = new Animated.Value(0);
 
   useEffect(() => {
     console.log('Splash screen mounted');
     
     // Start animations
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.timing(taglineAnim, {
         toValue: 1,
-        duration: 1000,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
+        duration: 800,
+        delay: 200,
         useNativeDriver: true,
       }),
     ]).start();
 
-    // Navigate to login after 2.5 seconds
+    // Navigate to login after 3 seconds
     const timer = setTimeout(() => {
       console.log('Navigating to login screen');
       router.replace('/login');
-    }, 2500);
+    }, 3000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -59,6 +68,23 @@ export default function SplashScreen() {
             <Text style={styles.logoText}>B</Text>
           </LinearGradient>
           <Text style={styles.appName}>BlaqApp</Text>
+          
+          <Animated.View
+            style={[
+              styles.taglineContainer,
+              {
+                opacity: taglineAnim,
+                transform: [{
+                  translateY: taglineAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0],
+                  }),
+                }],
+              },
+            ]}
+          >
+            <Text style={styles.tagline}>Email-first messaging</Text>
+          </Animated.View>
         </Animated.View>
       </LinearGradient>
     </SafeAreaView>
@@ -95,5 +121,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 1,
+    marginBottom: 12,
+  },
+  taglineContainer: {
+    alignItems: 'center',
+  },
+  tagline: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#A1A1AA',
+    letterSpacing: 0.5,
+    textAlign: 'center',
   },
 });

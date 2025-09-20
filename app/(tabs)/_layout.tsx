@@ -28,6 +28,15 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
+        name="home"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="friends"
         options={{
           title: 'Friends',
@@ -37,20 +46,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="status"
-        options={{
-          title: 'Status',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="radio-button-on" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="chats"
         options={{
           title: 'Chats',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubbles" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="status"
+        options={{
+          title: 'Status',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="radio-button-on" size={size} color={color} />
           ),
         }}
       />
