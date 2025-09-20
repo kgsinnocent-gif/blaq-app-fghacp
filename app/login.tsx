@@ -1,190 +1,193 @@
 
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../hooks/useTheme';
 import ThemeToggle from '../components/ThemeToggle';
+
+const createStyles = (theme: any) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  themeToggle: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    zIndex: 1,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 48,
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: theme.colors.text,
+  },
+  passwordContainer: {
+    position: 'relative',
+  },
+  passwordToggle: {
+    position: 'absolute',
+    right: 16,
+    top: 16,
+  },
+  loginButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  loginButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  switchText: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
+  },
+  switchButton: {
+    marginLeft: 4,
+  },
+  switchButtonText: {
+    fontSize: 16,
+    color: theme.colors.primary,
+    fontWeight: '600',
+  },
+});
 
 export default function LoginScreen() {
   const router = useRouter();
   const { theme } = useTheme();
+  const styles = createStyles(theme);
   const [email, setEmail] = useState('kagiso@blaq.app');
   const [password, setPassword] = useState('password');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async () => {
-    console.log('Login attempt with email:', email);
+  const handleLogin = () => {
+    console.log('Login attempt:', { email, password });
     
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
-    setIsLoading(true);
-    
-    // Simulate login process
-    setTimeout(() => {
-      console.log('Login successful, navigating to home screen');
-      setIsLoading(false);
-      router.replace('/(tabs)/home');
-    }, 1000);
+    if (!email.includes('@')) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
+    // Simple validation for demo
+    if (email === 'kagiso@blaq.app' && password === 'password') {
+      console.log('Login successful, redirecting to chats');
+      router.replace('/(tabs)/chats');
+    } else {
+      Alert.alert('Error', 'Invalid email or password');
+    }
   };
 
   const navigateToRegister = () => {
-    console.log('Navigating to register screen');
+    console.log('Navigating to register');
     router.push('/register');
   };
 
-  const styles = createStyles(theme);
-
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ThemeToggle />
+    <SafeAreaView style={styles.container}>
+      <ThemeToggle style={styles.themeToggle} />
       
       <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.colors.text }]}>Welcome Back</Text>
-          <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-            Sign in to continue to BlaqApp
-          </Text>
+        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.subtitle}>Sign in to continue to BlaqApp</Text>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Enter your email"
+            placeholderTextColor={theme.colors.textSecondary}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+          />
         </View>
 
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Password</Text>
+          <View style={styles.passwordContainer}>
             <TextInput
-              style={[styles.input, { 
-                backgroundColor: theme.colors.inputBackground,
-                borderColor: theme.colors.border,
-                color: theme.colors.text 
-              }]}
-              placeholder="Email"
-              placeholderTextColor={theme.colors.textSecondary}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={[styles.input, { 
-                backgroundColor: theme.colors.inputBackground,
-                borderColor: theme.colors.border,
-                color: theme.colors.text 
-              }]}
-              placeholder="Password"
-              placeholderTextColor={theme.colors.textSecondary}
+              style={styles.input}
               value={password}
               onChangeText={setPassword}
+              placeholder="Enter your password"
+              placeholderTextColor={theme.colors.textSecondary}
               secureTextEntry={!showPassword}
               autoComplete="password"
             />
             <TouchableOpacity
-              style={styles.eyeIcon}
+              style={styles.passwordToggle}
               onPress={() => setShowPassword(!showPassword)}
             >
               <Ionicons
                 name={showPassword ? 'eye-off' : 'eye'}
-                size={20}
+                size={24}
                 color={theme.colors.textSecondary}
               />
             </TouchableOpacity>
           </View>
+        </View>
 
-          <TouchableOpacity
-            style={[styles.loginButton, { backgroundColor: theme.colors.primary }]}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            <Text style={styles.loginButtonText}>
-              {isLoading ? 'Signing In...' : 'Sign In'}
-            </Text>
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <Text style={styles.loginButtonText}>Log In</Text>
+        </TouchableOpacity>
+
+        <View style={styles.switchContainer}>
+          <Text style={styles.switchText}>Don't have an account?</Text>
+          <TouchableOpacity style={styles.switchButton} onPress={navigateToRegister}>
+            <Text style={styles.switchButtonText}>Sign Up</Text>
           </TouchableOpacity>
-
-          <View style={styles.registerContainer}>
-            <Text style={[styles.registerText, { color: theme.colors.textSecondary }]}>
-              Don&apos;t have an account?{' '}
-            </Text>
-            <TouchableOpacity onPress={navigateToRegister}>
-              <Text style={[styles.registerLink, { color: theme.colors.primary }]}>
-                Sign Up
-              </Text>
-            </TouchableOpacity>
-          </View>
         </View>
       </View>
     </SafeAreaView>
   );
 }
-
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    justifyContent: 'center',
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 48,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  form: {
-    width: '100%',
-  },
-  inputContainer: {
-    position: 'relative',
-    marginBottom: 16,
-  },
-  input: {
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    fontSize: 16,
-    borderWidth: 1,
-  },
-  eyeIcon: {
-    position: 'absolute',
-    right: 16,
-    top: 18,
-  },
-  loginButton: {
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  loginButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  registerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  registerText: {
-    fontSize: 14,
-  },
-  registerLink: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});

@@ -16,7 +16,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
@@ -26,6 +26,20 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     color: theme.colors.text,
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  shareButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
   },
   content: {
     flex: 1,
@@ -146,6 +160,29 @@ export default function StatusScreen() {
   const recentStatuses = statuses.filter(status => !status.viewed);
   const viewedStatuses = statuses.filter(status => status.viewed);
 
+  const handleShareStatus = async () => {
+    console.log('Sharing new status');
+    
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (permissionResult.granted === false) {
+      Alert.alert('Permission Required', 'Permission to access camera roll is required!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [9, 16],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      console.log('Selected image:', result.assets[0].uri);
+      Alert.alert('Status Shared', 'Your status has been posted!');
+    }
+  };
+
   const handleCreateStatus = async () => {
     console.log('Creating new status');
     
@@ -192,6 +229,10 @@ export default function StatusScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Status</Text>
+        <TouchableOpacity style={styles.shareButton} onPress={handleShareStatus}>
+          <Ionicons name="camera" size={16} color="white" />
+          <Text style={styles.shareButtonText}>Share Status</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>

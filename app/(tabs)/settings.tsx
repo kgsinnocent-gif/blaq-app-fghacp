@@ -4,6 +4,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch } from 're
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../hooks/useTheme';
+import { mockUsers, currentUserId, mockFriendRequests } from '../../data/mockData';
 
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
@@ -27,6 +28,59 @@ const createStyles = (theme: any) => StyleSheet.create({
   content: {
     flex: 1,
     paddingTop: 20,
+  },
+  profileSection: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    backgroundColor: theme.colors.surface,
+    marginBottom: 20,
+    borderRadius: 16,
+    marginHorizontal: 20,
+  },
+  profileAvatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  profileAvatarText: {
+    color: 'white',
+    fontSize: 32,
+    fontWeight: '600',
+  },
+  profileName: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: 4,
+  },
+  profileEmail: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
+    marginBottom: 20,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
   },
   section: {
     marginBottom: 32,
@@ -113,6 +167,10 @@ export default function SettingsScreen() {
   const { theme, toggleTheme } = useTheme();
   const styles = createStyles(theme);
 
+  const currentUser = mockUsers.find(user => user.id === currentUserId);
+  const friends = mockUsers.filter(user => user.id !== currentUserId);
+  const pendingRequests = mockFriendRequests.filter(req => req.status === 'pending');
+
   const handleThemeChange = (isDark: boolean) => {
     console.log('Theme change requested:', isDark ? 'dark' : 'light');
     if (theme.isDark !== isDark) {
@@ -120,13 +178,42 @@ export default function SettingsScreen() {
     }
   };
 
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={styles.headerTitle}>Profile</Text>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.profileSection}>
+          <View style={styles.profileAvatar}>
+            <Text style={styles.profileAvatarText}>
+              {getInitials(currentUser?.name || 'User')}
+            </Text>
+          </View>
+          <Text style={styles.profileName}>{currentUser?.name || 'User'}</Text>
+          <Text style={styles.profileEmail}>{currentUser?.email || 'user@example.com'}</Text>
+          
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{friends.length}</Text>
+              <Text style={styles.statLabel}>Friends</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{pendingRequests.length}</Text>
+              <Text style={styles.statLabel}>Pending{'\n'}Requests</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>5</Text>
+              <Text style={styles.statLabel}>Active{'\n'}Chats</Text>
+            </View>
+          </View>
+        </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Appearance</Text>
           
@@ -192,7 +279,7 @@ export default function SettingsScreen() {
                 color={theme.colors.primary} 
                 style={styles.settingIcon}
               />
-              <Text style={styles.settingText}>Profile</Text>
+              <Text style={styles.settingText}>Edit Profile</Text>
             </View>
             <Ionicons 
               name="chevron-forward" 
