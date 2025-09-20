@@ -5,16 +5,40 @@ export const colors = {
   primary: '#7C3AED',    // Vibrant purple as specified
   secondary: '#8B5CF6',  // Lighter purple
   accent: '#A78BFA',     // Even lighter purple
-  background: '#FFFFFF',  // Light background (default)
-  backgroundAlt: '#F9FAFB',  // Slightly darker light
-  surface: '#FFFFFF',    // Card/surface color
-  text: '#111827',       // Dark text
-  textSecondary: '#6B7280', // Gray text
   success: '#10B981',    // Green
   error: '#EF4444',      // Red
   warning: '#F59E0B',    // Orange
-  border: '#E5E7EB',     // Border color
-  inputBackground: '#F9FAFB', // Input background
+  
+  // Light theme colors
+  light: {
+    background: '#FFFFFF',
+    backgroundAlt: '#F9FAFB',
+    surface: '#FFFFFF',
+    text: '#111827',
+    textSecondary: '#6B7280',
+    border: '#E5E7EB',
+    inputBackground: '#F9FAFB',
+  },
+  
+  // Dark theme colors
+  dark: {
+    background: '#0F0F23',
+    backgroundAlt: '#1A1A2E',
+    surface: '#16213E',
+    text: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    border: '#374151',
+    inputBackground: '#1F2937',
+  },
+  
+  // Default colors for backward compatibility
+  background: '#FFFFFF',
+  backgroundAlt: '#F9FAFB',
+  surface: '#FFFFFF',
+  text: '#111827',
+  textSecondary: '#6B7280',
+  border: '#E5E7EB',
+  inputBackground: '#F9FAFB',
 };
 
 export const buttonStyles = StyleSheet.create({
@@ -27,14 +51,14 @@ export const buttonStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   secondary: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.light.surface,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.light.border,
   },
   text: {
     backgroundColor: 'transparent',

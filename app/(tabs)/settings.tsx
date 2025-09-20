@@ -96,7 +96,7 @@ export default function SettingsScreen() {
                 </Text>
               )}
               <View style={styles.editIcon}>
-                <Ionicons name="camera" size={16} color={theme.colors.text} />
+                <Ionicons name="camera" size={16} color="#FFFFFF" />
               </View>
             </View>
           </TouchableOpacity>
@@ -140,19 +140,19 @@ export default function SettingsScreen() {
                     style={styles.messageButton}
                     onPress={() => handleMessageUser(request.fromUser)}
                   >
-                    <Ionicons name="chatbubble" size={16} color={theme.colors.text} />
+                    <Ionicons name="chatbubble" size={16} color="#FFFFFF" />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.acceptButton}
                     onPress={() => handleAcceptRequest(request.id)}
                   >
-                    <Ionicons name="checkmark" size={16} color={theme.colors.text} />
+                    <Ionicons name="checkmark" size={16} color="#FFFFFF" />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.declineButton}
                     onPress={() => handleDeclineRequest(request.id)}
                   >
-                    <Ionicons name="close" size={16} color={theme.colors.text} />
+                    <Ionicons name="close" size={16} color="#FFFFFF" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -528,7 +528,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderColor: theme.colors.background,
   },
   avatarText: {
-    color: theme.colors.text,
+    color: '#FFFFFF',
     fontSize: 36,
     fontWeight: '600',
   },
@@ -722,7 +722,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
   },
   saveButtonText: {
-    color: theme.colors.text,
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },

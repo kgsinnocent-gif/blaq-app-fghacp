@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState } from 'react';
 import { Theme } from '../types';
 import { colors } from '../styles/commonStyles';
 
@@ -9,14 +9,6 @@ interface ThemeContextType {
 }
 
 export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-};
 
 const lightTheme: Theme = {
   isDark: false,

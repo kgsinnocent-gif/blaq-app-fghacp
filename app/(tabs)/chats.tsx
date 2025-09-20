@@ -82,7 +82,7 @@ export default function ChatsScreen() {
             style={styles.startChatButton}
             onPress={() => setShowStartChat(true)}
           >
-            <Ionicons name="add" size={24} color={theme.colors.text} />
+            <Ionicons name="add" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       </View>
@@ -263,7 +263,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     position: 'relative',
   },
   avatarText: {
-    color: theme.colors.text,
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
   },
@@ -342,7 +342,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
   },
   addButtonText: {
-    color: theme.colors.text,
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },

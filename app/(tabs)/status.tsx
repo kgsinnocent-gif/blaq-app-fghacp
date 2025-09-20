@@ -114,7 +114,7 @@ export default function StatusScreen() {
                 {getInitials('Kagiso')}
               </Text>
               <View style={styles.addStatusIcon}>
-                <Ionicons name="add" size={16} color={theme.colors.text} />
+                <Ionicons name="add" size={16} color="#FFFFFF" />
               </View>
             </View>
             <View style={styles.statusInfo}>
@@ -330,7 +330,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderColor: theme.colors.border,
   },
   avatarText: {
-    color: theme.colors.text,
+    color: '#FFFFFF',
     fontSize: 20,
     fontWeight: '600',
   },
@@ -451,7 +451,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
   },
   postButtonText: {
-    color: theme.colors.text,
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
