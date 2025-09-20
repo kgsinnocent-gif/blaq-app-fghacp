@@ -1,798 +1,646 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput, Alert, Image, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
-import { mockUsers, currentUserId, mockFriendRequests } from '../../data/mockData';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { SupabaseService } from '../../services/supabaseService';
+
+const createStyles = (theme: any) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: theme.text,
+  },
+  profileSection: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: 16,
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: theme.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  avatarText: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  editAvatarButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: theme.primary,
+    borderRadius: 16,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: theme.background,
+  },
+  displayName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: theme.text,
+    marginBottom: 4,
+  },
+  email: {
+    fontSize: 16,
+    color: theme.textSecondary,
+    marginBottom: 8,
+  },
+  bio: {
+    fontSize: 14,
+    color: theme.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: 32,
+  },
+  editProfileButton: {
+    backgroundColor: theme.surface,
+    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 8,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: theme.border,
+  },
+  editProfileText: {
+    color: theme.text,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  section: {
+    paddingVertical: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.text,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: theme.background,
+  },
+  menuItemIcon: {
+    marginRight: 16,
+    width: 24,
+    alignItems: 'center',
+  },
+  menuItemText: {
+    flex: 1,
+    fontSize: 16,
+    color: theme.text,
+  },
+  menuItemBadge: {
+    backgroundColor: theme.primary,
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  menuItemBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  menuItemArrow: {
+    marginLeft: 8,
+  },
+  logoutButton: {
+    backgroundColor: '#FF3B30',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginHorizontal: 20,
+    marginVertical: 20,
+  },
+  logoutButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: theme.surface,
+    borderRadius: 16,
+    padding: 24,
+    width: '90%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: theme.text,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  input: {
+    backgroundColor: theme.background,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: theme.text,
+    borderWidth: 1,
+    borderColor: theme.border,
+    marginBottom: 16,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  modalButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  cancelButton: {
+    backgroundColor: theme.border,
+  },
+  saveButton: {
+    backgroundColor: theme.primary,
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  cancelButtonText: {
+    color: theme.text,
+  },
+  saveButtonText: {
+    color: 'white',
+  },
+  requestItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
+  },
+  requestAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  requestAvatarText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  requestInfo: {
+    flex: 1,
+  },
+  requestName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.text,
+  },
+  requestEmail: {
+    fontSize: 14,
+    color: theme.textSecondary,
+  },
+  requestActions: {
+    flexDirection: 'row',
+  },
+  requestButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 16,
+    marginLeft: 8,
+  },
+  acceptButton: {
+    backgroundColor: theme.primary,
+  },
+  declineButton: {
+    backgroundColor: theme.border,
+  },
+  requestButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  acceptButtonText: {
+    color: 'white',
+  },
+  declineButtonText: {
+    color: theme.text,
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  switchText: {
+    fontSize: 16,
+    color: theme.text,
+    flex: 1,
+  },
+});
 
 export default function SettingsScreen() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
+  const router = useRouter();
+  const { user, signOut } = useAuth();
+  const [profile, setProfile] = useState<any>(null);
+  const [friendRequests, setFriendRequests] = useState<any[]>([]);
   const [showEditProfile, setShowEditProfile] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showPrivacy, setShowPrivacy] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
-  const [showAbout, setShowAbout] = useState(false);
-  const [bio, setBio] = useState('Hey there! I am using BlaqApp.');
-  const [profileImage, setProfileImage] = useState(null);
+  const [showPendingRequests, setShowPendingRequests] = useState(false);
+  const [editDisplayName, setEditDisplayName] = useState('');
+  const [editBio, setEditBio] = useState('');
+  const [darkMode, setDarkMode] = useState(theme.isDark);
+
   const styles = createStyles(theme);
 
-  const currentUser = mockUsers.find(user => user.id === currentUserId);
-  const pendingRequests = mockFriendRequests.filter(req => 
-    req.toUser.id === currentUserId && req.status === 'pending'
-  );
+  useEffect(() => {
+    if (user) {
+      loadProfile();
+      loadFriendRequests();
+    }
+  }, [user]);
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
-  };
-
-  const handleEditProfilePicture = async () => {
-    try {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (permissionResult.granted === false) {
-        Alert.alert('Permission Required', 'Permission to access camera roll is required!');
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setProfileImage(result.assets[0].uri);
-        console.log('Profile picture updated:', result.assets[0].uri);
-        Alert.alert('Success', 'Profile picture updated!');
-      }
-    } catch (error) {
-      console.error('Error updating profile picture:', error);
-      Alert.alert('Error', 'Failed to update profile picture');
+  const loadProfile = async () => {
+    if (!user) return;
+    
+    const profileData = await SupabaseService.getProfile(user.id);
+    if (profileData) {
+      setProfile(profileData);
+      setEditDisplayName(profileData.display_name);
+      setEditBio(profileData.bio || '');
     }
   };
 
-  const handleAcceptRequest = (requestId: string) => {
-    console.log('Accepting friend request:', requestId);
-    Alert.alert('Success', 'Friend request accepted!');
+  const loadFriendRequests = async () => {
+    if (!user) return;
+    
+    const requests = await SupabaseService.getFriendRequests(user.id);
+    const incomingRequests = requests.filter(req => req.to_user_id === user.id);
+    
+    // Get profile data for each request sender
+    const requestsWithProfiles = await Promise.all(
+      incomingRequests.map(async (request) => {
+        const senderProfile = await SupabaseService.getProfile(request.from_user_id!);
+        return {
+          ...request,
+          senderProfile
+        };
+      })
+    );
+    
+    setFriendRequests(requestsWithProfiles.filter(req => req.senderProfile));
   };
 
-  const handleDeclineRequest = (requestId: string) => {
-    console.log('Declining friend request:', requestId);
-    Alert.alert('Success', 'Friend request declined');
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
-  const handleOpenUserProfile = (user: any) => {
-    console.log('Opening user profile:', user.displayName);
-    Alert.alert('User Profile', `Viewing ${user.displayName}'s profile\n\nEmail: ${user.email}\nMessage: Hey there! I am using BlaqApp.`, [
-      { text: 'Message', onPress: () => handleMessageUser(user) },
-      { text: 'Close', style: 'cancel' }
-    ]);
+  const handleEditProfilePicture = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please grant camera roll permissions to change your profile picture.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      // In a real app, you would upload this to Supabase Storage
+      // For now, we'll just show an alert
+      Alert.alert('Feature Coming Soon', 'Profile picture upload will be available soon!');
+    }
   };
 
-  const handleMessageUser = (user: any) => {
-    console.log('Starting chat with:', user.displayName);
-    Alert.alert('Chat', `Starting chat with ${user.displayName}`);
+  const handleSaveProfile = async () => {
+    if (!user || !profile) return;
+
+    const { error } = await SupabaseService.updateProfile(user.id, {
+      display_name: editDisplayName,
+      bio: editBio,
+    });
+
+    if (error) {
+      Alert.alert('Error', 'Failed to update profile');
+    } else {
+      setProfile({
+        ...profile,
+        display_name: editDisplayName,
+        bio: editBio,
+      });
+      setShowEditProfile(false);
+      Alert.alert('Success', 'Profile updated successfully!');
+    }
   };
+
+  const handleAcceptRequest = async (requestId: string) => {
+    const { error } = await SupabaseService.acceptFriendRequest(requestId);
+    
+    if (error) {
+      Alert.alert('Error', 'Failed to accept friend request');
+    } else {
+      Alert.alert('Success', 'Friend request accepted!');
+      loadFriendRequests(); // Reload requests
+    }
+  };
+
+  const handleDeclineRequest = async (requestId: string) => {
+    const { error } = await SupabaseService.declineFriendRequest(requestId);
+    
+    if (error) {
+      Alert.alert('Error', 'Failed to decline friend request');
+    } else {
+      loadFriendRequests(); // Reload requests
+    }
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            const { error } = await signOut();
+            if (error) {
+              Alert.alert('Error', 'Failed to logout');
+            } else {
+              router.replace('/login');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  if (!profile) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Profile</Text>
+        </View>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: theme.textSecondary }}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Profile</Text>
+        <Text style={styles.headerTitle}>Profile</Text>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* User Profile Section */}
+      <ScrollView>
+        {/* Profile Section */}
         <View style={styles.profileSection}>
-          <TouchableOpacity onPress={handleEditProfilePicture}>
-            <View style={styles.avatarLarge}>
-              {profileImage ? (
-                <Image source={{ uri: profileImage }} style={styles.profileImage} />
+          <View style={styles.avatarContainer}>
+            <View style={styles.avatar}>
+              {profile.avatar_url ? (
+                <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
               ) : (
-                <Text style={styles.avatarText}>
-                  {currentUser ? getInitials(currentUser.displayName) : 'U'}
-                </Text>
+                <Text style={styles.avatarText}>{getInitials(profile.display_name)}</Text>
               )}
-              <View style={styles.editIcon}>
-                <Ionicons name="camera" size={16} color="#FFFFFF" />
-              </View>
             </View>
-          </TouchableOpacity>
-          <Text style={styles.displayName}>
-            {currentUser?.displayName || 'User'}
-          </Text>
-          <Text style={styles.email}>
-            {currentUser?.email || 'user@example.com'}
-          </Text>
-          <TouchableOpacity 
-            style={styles.editBioButton}
-            onPress={() => setShowEditProfile(true)}
-          >
-            <Text style={styles.bio}>{bio}</Text>
-            <Ionicons name="pencil" size={16} color={theme.colors.textSecondary} />
+            <TouchableOpacity style={styles.editAvatarButton} onPress={handleEditProfilePicture}>
+              <Ionicons name="camera" size={16} color="white" />
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.displayName}>{profile.display_name}</Text>
+          <Text style={styles.email}>{profile.email}</Text>
+          {profile.bio && <Text style={styles.bio}>{profile.bio}</Text>}
+
+          <TouchableOpacity style={styles.editProfileButton} onPress={() => setShowEditProfile(true)}>
+            <Text style={styles.editProfileText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Pending Requests Section */}
-        {pendingRequests.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Pending Requests</Text>
-            {pendingRequests.map((request) => (
-              <View key={request.id} style={styles.requestCard}>
-                <TouchableOpacity 
-                  style={styles.userInfo}
-                  onPress={() => handleOpenUserProfile(request.fromUser)}
-                >
-                  <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>
-                      {getInitials(request.fromUser.displayName)}
-                    </Text>
-                  </View>
-                  <View style={styles.userDetails}>
-                    <Text style={styles.userName}>{request.fromUser.displayName}</Text>
-                    <Text style={styles.userEmail}>{request.fromUser.email}</Text>
-                  </View>
-                </TouchableOpacity>
-                <View style={styles.requestActions}>
-                  <TouchableOpacity
-                    style={styles.messageButton}
-                    onPress={() => handleMessageUser(request.fromUser)}
-                  >
-                    <Ionicons name="chatbubble" size={16} color="#FFFFFF" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.acceptButton}
-                    onPress={() => handleAcceptRequest(request.id)}
-                  >
-                    <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.declineButton}
-                    onPress={() => handleDeclineRequest(request.id)}
-                  >
-                    <Ionicons name="close" size={16} color="#FFFFFF" />
-                  </TouchableOpacity>
-                </View>
+        {/* Pending Requests */}
+        <View style={styles.section}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => setShowPendingRequests(true)}>
+            <View style={styles.menuItemIcon}>
+              <Ionicons name="person-add" size={24} color={theme.primary} />
+            </View>
+            <Text style={styles.menuItemText}>Pending Requests</Text>
+            {friendRequests.length > 0 && (
+              <View style={styles.menuItemBadge}>
+                <Text style={styles.menuItemBadgeText}>{friendRequests.length}</Text>
               </View>
-            ))}
-          </View>
-        )}
+            )}
+            <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} style={styles.menuItemArrow} />
+          </TouchableOpacity>
+        </View>
 
-        {/* Settings Section */}
-        <View style={styles.settingsSection}>
+        {/* Settings */}
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Settings</Text>
           
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={() => setShowNotifications(true)}
-          >
-            <View style={styles.settingInfo}>
-              <Ionicons name="notifications" size={24} color={theme.colors.primary} />
-              <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Notifications</Text>
-                <Text style={styles.settingDescription}>Manage notification preferences</Text>
-              </View>
+          <View style={styles.switchContainer}>
+            <Text style={styles.switchText}>Dark Mode</Text>
+            <Switch
+              value={darkMode}
+              onValueChange={setDarkMode}
+              trackColor={{ false: theme.border, true: theme.primary }}
+              thumbColor={darkMode ? 'white' : theme.textSecondary}
+            />
+          </View>
+
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.menuItemIcon}>
+              <Ionicons name="notifications" size={24} color={theme.textSecondary} />
             </View>
-            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+            <Text style={styles.menuItemText}>Notifications</Text>
+            <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} style={styles.menuItemArrow} />
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={() => setShowPrivacy(true)}
-          >
-            <View style={styles.settingInfo}>
-              <Ionicons name="lock-closed" size={24} color={theme.colors.primary} />
-              <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Privacy</Text>
-                <Text style={styles.settingDescription}>Privacy and security settings</Text>
-              </View>
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.menuItemIcon}>
+              <Ionicons name="shield-checkmark" size={24} color={theme.textSecondary} />
             </View>
-            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+            <Text style={styles.menuItemText}>Privacy</Text>
+            <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} style={styles.menuItemArrow} />
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={() => setShowHelp(true)}
-          >
-            <View style={styles.settingInfo}>
-              <Ionicons name="help-circle" size={24} color={theme.colors.primary} />
-              <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>Help & Support</Text>
-                <Text style={styles.settingDescription}>Get help and contact support</Text>
-              </View>
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.menuItemIcon}>
+              <Ionicons name="help-circle" size={24} color={theme.textSecondary} />
             </View>
-            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+            <Text style={styles.menuItemText}>Help & Support</Text>
+            <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} style={styles.menuItemArrow} />
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={() => setShowAbout(true)}
-          >
-            <View style={styles.settingInfo}>
-              <Ionicons name="information-circle" size={24} color={theme.colors.primary} />
-              <View style={styles.settingText}>
-                <Text style={styles.settingTitle}>About</Text>
-                <Text style={styles.settingDescription}>App version and information</Text>
-              </View>
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.menuItemIcon}>
+              <Ionicons name="information-circle" size={24} color={theme.textSecondary} />
             </View>
-            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+            <Text style={styles.menuItemText}>About</Text>
+            <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} style={styles.menuItemArrow} />
           </TouchableOpacity>
         </View>
 
-        {/* Logout Section */}
-        <View style={styles.logoutSection}>
-          <TouchableOpacity style={styles.logoutButton}>
-            <Ionicons name="log-out" size={24} color={theme.colors.error} />
-            <Text style={styles.logoutText}>Sign Out</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Logout</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       {/* Edit Profile Modal */}
-      <Modal
-        visible={showEditProfile}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowEditProfile(false)}
-      >
+      <Modal visible={showEditProfile} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit Message</Text>
-              <TouchableOpacity onPress={() => setShowEditProfile(false)}>
-                <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.modalTitle}>Edit Profile</Text>
+            
             <TextInput
-              style={styles.bioInput}
-              placeholder="Write your message..."
-              placeholderTextColor={theme.colors.textSecondary}
-              value={bio}
-              onChangeText={setBio}
-              multiline
-              maxLength={150}
+              style={styles.input}
+              placeholder="Display Name"
+              placeholderTextColor={theme.textSecondary}
+              value={editDisplayName}
+              onChangeText={setEditDisplayName}
             />
-            <TouchableOpacity 
-              style={styles.saveButton} 
-              onPress={() => {
-                setShowEditProfile(false);
-                Alert.alert('Success', 'Message updated!');
-              }}
-            >
-              <Text style={styles.saveButtonText}>Save</Text>
-            </TouchableOpacity>
+            
+            <TextInput
+              style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
+              placeholder="Bio (optional)"
+              placeholderTextColor={theme.textSecondary}
+              value={editBio}
+              onChangeText={setEditBio}
+              multiline
+            />
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setShowEditProfile(false)}
+              >
+                <Text style={[styles.modalButtonText, styles.cancelButtonText]}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.modalButton, styles.saveButton]}
+                onPress={handleSaveProfile}
+              >
+                <Text style={[styles.modalButtonText, styles.saveButtonText]}>Save</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
 
-      {/* Notifications Modal */}
-      <Modal
-        visible={showNotifications}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowNotifications(false)}
-      >
+      {/* Pending Requests Modal */}
+      <Modal visible={showPendingRequests} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Notifications</Text>
-              <TouchableOpacity onPress={() => setShowNotifications(false)}>
-                <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView>
-              <View style={styles.notificationItem}>
-                <View style={styles.notificationInfo}>
-                  <Text style={styles.notificationTitle}>Message Alerts</Text>
-                  <Text style={styles.notificationDesc}>Get notified when you receive messages</Text>
-                </View>
-                <Switch
-                  value={true}
-                  trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-                  thumbColor={theme.colors.surface}
-                />
-              </View>
-              <View style={styles.notificationItem}>
-                <View style={styles.notificationInfo}>
-                  <Text style={styles.notificationTitle}>Friend Requests</Text>
-                  <Text style={styles.notificationDesc}>Get notified about friend requests</Text>
-                </View>
-                <Switch
-                  value={true}
-                  trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-                  thumbColor={theme.colors.surface}
-                />
-              </View>
-              <View style={styles.notificationItem}>
-                <View style={styles.notificationInfo}>
-                  <Text style={styles.notificationTitle}>Group Chat Notifications</Text>
-                  <Text style={styles.notificationDesc}>Notifications for group messages</Text>
-                </View>
-                <Switch
-                  value={false}
-                  trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-                  thumbColor={theme.colors.surface}
-                />
-              </View>
-              <View style={styles.notificationItem}>
-                <View style={styles.notificationInfo}>
-                  <Text style={styles.notificationTitle}>Status Showcase</Text>
-                  <Text style={styles.notificationDesc}>Notifications when friends post status</Text>
-                </View>
-                <Switch
-                  value={true}
-                  trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-                  thumbColor={theme.colors.surface}
-                />
-              </View>
-              <TouchableOpacity style={styles.notificationItem}>
-                <View style={styles.notificationInfo}>
-                  <Text style={styles.notificationTitle}>Mute Specific Chats</Text>
-                  <Text style={styles.notificationDesc}>Manage muted conversations</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Privacy Modal */}
-      <Modal
-        visible={showPrivacy}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowPrivacy(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Privacy</Text>
-              <TouchableOpacity onPress={() => setShowPrivacy(false)}>
-                <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView>
-              <View style={styles.privacyItem}>
-                <View style={styles.privacyInfo}>
-                  <Text style={styles.privacyTitle}>Dark Mode</Text>
-                  <Text style={styles.privacyDesc}>Switch between light and dark themes</Text>
-                </View>
-                <Switch
-                  value={theme.isDark}
-                  onValueChange={toggleTheme}
-                  trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-                  thumbColor={theme.colors.surface}
-                />
-              </View>
-              <TouchableOpacity style={styles.privacyItem}>
-                <View style={styles.privacyInfo}>
-                  <Text style={styles.privacyTitle}>Friend Requests</Text>
-                  <Text style={styles.privacyDesc}>Control who can send you friend requests</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.privacyItem}>
-                <View style={styles.privacyInfo}>
-                  <Text style={styles.privacyTitle}>Profile Visibility</Text>
-                  <Text style={styles.privacyDesc}>Public / Friends Only</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.privacyItem}>
-                <View style={styles.privacyInfo}>
-                  <Text style={styles.privacyTitle}>Block & Report</Text>
-                  <Text style={styles.privacyDesc}>Block or report unwanted users</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.privacyItem}>
-                <View style={styles.privacyInfo}>
-                  <Text style={styles.privacyTitle}>Safe Mode</Text>
-                  <Text style={styles.privacyDesc}>Filter out inappropriate content</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Help & Support Modal */}
-      <Modal
-        visible={showHelp}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowHelp(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Help & Support</Text>
-              <TouchableOpacity onPress={() => setShowHelp(false)}>
-                <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView>
-              <TouchableOpacity style={styles.helpItem}>
-                <View style={styles.helpInfo}>
-                  <Text style={styles.helpTitle}>FAQs</Text>
-                  <Text style={styles.helpDesc}>Find quick answers to common questions</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.helpItem}>
-                <View style={styles.helpInfo}>
-                  <Text style={styles.helpTitle}>Report a Problem</Text>
-                  <Text style={styles.helpDesc}>Describe issues or bugs, attach screenshots</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-              <View style={styles.helpItem}>
-                <View style={styles.helpInfo}>
-                  <Text style={styles.helpTitle}>Contact Support</Text>
-                  <Text style={styles.helpDesc}>📧 Email: info@se-mo.com</Text>
-                  <Text style={styles.helpDesc}>🌐 Website: www.se-mo.com/help</Text>
-                  <Text style={styles.helpDesc}>📱 In-App: Profile → Help & Support → Contact Us</Text>
-                </View>
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      {/* About Modal */}
-      <Modal
-        visible={showAbout}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowAbout(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>About BlaqApp</Text>
-              <TouchableOpacity onPress={() => setShowAbout(false)}>
-                <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView>
-              <Text style={styles.aboutText}>
-                BlaqApp is a messaging and social platform created by Se-Mo.
-                {'\n\n'}
-                Our mission is to connect communities through a modern, creative communication app that's built for everyone, inspired by culture, and driven by innovation.
-                {'\n\n'}
-                Unlike traditional messaging apps, BlaqApp uses email addresses to find and connect with friends, making it simple, secure, and more inclusive. The app is designed to be easy, friendly, and welcoming, so anyone can join and stay connected without barriers.
-                {'\n\n'}
-                Tagline: BlaqApp – Connecting Beyond.
+            <Text style={styles.modalTitle}>Pending Requests</Text>
+            
+            {friendRequests.length === 0 ? (
+              <Text style={{ color: theme.textSecondary, textAlign: 'center', marginVertical: 20 }}>
+                No pending requests
               </Text>
-            </ScrollView>
+            ) : (
+              <ScrollView style={{ maxHeight: 300 }}>
+                {friendRequests.map((request) => (
+                  <View key={request.id} style={styles.requestItem}>
+                    <View style={styles.requestAvatar}>
+                      <Text style={styles.requestAvatarText}>
+                        {getInitials(request.senderProfile.display_name)}
+                      </Text>
+                    </View>
+                    
+                    <View style={styles.requestInfo}>
+                      <Text style={styles.requestName}>{request.senderProfile.display_name}</Text>
+                      <Text style={styles.requestEmail}>{request.senderProfile.email}</Text>
+                    </View>
+                    
+                    <View style={styles.requestActions}>
+                      <TouchableOpacity
+                        style={[styles.requestButton, styles.declineButton]}
+                        onPress={() => handleDeclineRequest(request.id)}
+                      >
+                        <Text style={[styles.requestButtonText, styles.declineButtonText]}>Decline</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        style={[styles.requestButton, styles.acceptButton]}
+                        onPress={() => handleAcceptRequest(request.id)}
+                      >
+                        <Text style={[styles.requestButtonText, styles.acceptButtonText]}>Accept</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+            
+            <TouchableOpacity
+              style={[styles.modalButton, styles.cancelButton, { marginTop: 16 }]}
+              onPress={() => setShowPendingRequests(false)}
+            >
+              <Text style={[styles.modalButtonText, styles.cancelButtonText]}>Close</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
     </SafeAreaView>
   );
 }
-
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: theme.colors.text,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  profileSection: {
-    alignItems: 'center',
-    paddingVertical: 32,
-  },
-  avatarLarge: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: theme.colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    position: 'relative',
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  editIcon: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: theme.colors.primary,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: theme.colors.background,
-  },
-  avatarText: {
-    color: '#FFFFFF',
-    fontSize: 36,
-    fontWeight: '600',
-  },
-  displayName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: theme.colors.text,
-    marginBottom: 4,
-  },
-  email: {
-    fontSize: 16,
-    color: theme.colors.textSecondary,
-    marginBottom: 16,
-  },
-  editBioButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 8,
-  },
-  bio: {
-    fontSize: 14,
-    color: theme.colors.text,
-    maxWidth: 200,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 16,
-  },
-  requestCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: theme.colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  userDetails: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 2,
-  },
-  userEmail: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-  },
-  requestActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  messageButton: {
-    backgroundColor: theme.colors.primary,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  acceptButton: {
-    backgroundColor: theme.colors.success,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  declineButton: {
-    backgroundColor: theme.colors.error,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  settingsSection: {
-    marginBottom: 32,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  settingInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  settingText: {
-    marginLeft: 16,
-    flex: 1,
-  },
-  settingTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 2,
-  },
-  settingDescription: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-  },
-  logoutSection: {
-    marginBottom: 32,
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.surface,
-    borderRadius: 12,
-    paddingVertical: 16,
-    borderWidth: 1,
-    borderColor: theme.colors.error,
-  },
-  logoutText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.error,
-    marginLeft: 8,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: theme.colors.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: theme.colors.text,
-  },
-  bioInput: {
-    backgroundColor: theme.colors.inputBackground,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: theme.colors.text,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    marginBottom: 16,
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  saveButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  notificationItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  notificationInfo: {
-    flex: 1,
-  },
-  notificationTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 4,
-  },
-  notificationDesc: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-  },
-  privacyItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  privacyInfo: {
-    flex: 1,
-  },
-  privacyTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 4,
-  },
-  privacyDesc: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-  },
-  helpItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  helpInfo: {
-    flex: 1,
-  },
-  helpTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 4,
-  },
-  helpDesc: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    marginBottom: 2,
-  },
-  aboutText: {
-    fontSize: 16,
-    color: theme.colors.text,
-    lineHeight: 24,
-  },
-});

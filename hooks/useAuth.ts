@@ -84,6 +84,7 @@ export const useAuth = () => {
         email,
         password,
         options: {
+          emailRedirectTo: 'https://natively.dev/email-confirmed',
           data: {
             display_name: displayName,
           },

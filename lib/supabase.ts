@@ -1,15 +1,22 @@
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 
-// These will be set when the user connects to Supabase
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
+const SUPABASE_URL = "https://umgcchmsoxtljgogmajz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtZ2NjaG1zb3h0bGpnb2dtYWp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0MDAwODIsImV4cCI6MjA3Mzk3NjA4Mn0.7aQC6-VOxHDLUKbdU_l4DbasOqu4yqaFT8DmEE7YkL4";
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    storage: AsyncStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
+});
 
 // Check if Supabase is configured
 export const isSupabaseConfigured = () => {
-  return supabaseUrl && supabaseAnonKey && supabaseUrl !== '' && supabaseAnonKey !== '';
+  return SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_URL !== '' && SUPABASE_ANON_KEY !== '';
 };
 
 console.log('Supabase configuration status:', isSupabaseConfigured());
@@ -18,12 +25,14 @@ console.log('Supabase configuration status:', isSupabaseConfigured());
 export interface Database {
   public: {
     Tables: {
-      users: {
+      profiles: {
         Row: {
           id: string;
+          user_id: string;
           email: string;
           display_name: string;
           avatar_url?: string;
+          bio?: string;
           is_online: boolean;
           last_seen?: string;
           created_at: string;
@@ -31,9 +40,11 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          user_id: string;
           email: string;
           display_name: string;
           avatar_url?: string;
+          bio?: string;
           is_online?: boolean;
           last_seen?: string;
           created_at?: string;
@@ -41,9 +52,11 @@ export interface Database {
         };
         Update: {
           id?: string;
+          user_id?: string;
           email?: string;
           display_name?: string;
           avatar_url?: string;
+          bio?: string;
           is_online?: boolean;
           last_seen?: string;
           updated_at?: string;
@@ -72,6 +85,25 @@ export interface Database {
           to_user_id?: string;
           status?: 'pending' | 'accepted' | 'declined';
           updated_at?: string;
+        };
+      };
+      friendships: {
+        Row: {
+          id: string;
+          user_id: string;
+          friend_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          friend_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          friend_id?: string;
         };
       };
       statuses: {
@@ -108,16 +140,28 @@ export interface Database {
       chats: {
         Row: {
           id: string;
+          participant_1: string;
+          participant_2: string;
+          last_message?: string;
+          last_message_at?: string;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
+          participant_1: string;
+          participant_2: string;
+          last_message?: string;
+          last_message_at?: string;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
+          participant_1?: string;
+          participant_2?: string;
+          last_message?: string;
+          last_message_at?: string;
           updated_at?: string;
         };
       };
